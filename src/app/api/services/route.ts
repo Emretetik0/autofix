@@ -1,48 +1,53 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
-import { getDb, saveDb, Service } from '@/lib/db'
+import prisma from '@/lib/prisma'
 
 export async function GET() {
-  const db = getDb()
-  return NextResponse.json(db.services)
+  try {
+    const services = await prisma.service.findMany()
+    return NextResponse.json(services)
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  const db = getDb()
-  const body = await request.json()
-  
-  const newService: Service = {
-    id: db.services.length > 0 ? Math.max(...db.services.map(s => s.id)) + 1 : 1,
-    name: body.name,
-    description: body.description,
-    price: Number(body.price),
-    duration: Number(body.duration)
+  try {
+    const body = await request.json()
+    
+    const newService = await prisma.service.create({
+      data: {
+        name: body.name,
+        description: body.description,
+        price: Number(body.price),
+        duration: Number(body.duration)
+      }
+    })
+    
+    return NextResponse.json(newService, { status: 201 })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to create service' }, { status: 500 })
   }
-  
-  db.services.push(newService)
-  saveDb(db)
-  
-  return NextResponse.json(newService, { status: 201 })
 }
 
 export async function PUT(request: Request) {
-  const db = getDb()
-  const body = await request.json()
-  
-  const index = db.services.findIndex(s => s.id === body.id)
-  if (index !== -1) {
-    db.services[index] = {
-      ...db.services[index],
-      name: body.name,
-      description: body.description,
-      price: Number(body.price),
-      duration: Number(body.duration)
-    }
-    saveDb(db)
-    return NextResponse.json(db.services[index])
+  try {
+    const body = await request.json()
+    
+    const updatedService = await prisma.service.update({
+      where: { id: Number(body.id) },
+      data: {
+        name: body.name,
+        description: body.description,
+        price: Number(body.price),
+        duration: Number(body.duration)
+      }
+    })
+    
+    return NextResponse.json(updatedService)
+  } catch (error) {
+    return NextResponse.json({ error: 'Service not found or update failed' }, { status: 404 })
   }
-  
-  return NextResponse.json({ error: 'Service not found' }, { status: 404 })
 }
 
 export async function DELETE(request: Request) {
@@ -50,10 +55,14 @@ export async function DELETE(request: Request) {
   const id = searchParams.get('id')
   
   if (id) {
-    const db = getDb()
-    db.services = db.services.filter(s => s.id !== Number(id))
-    saveDb(db)
-    return NextResponse.json({ success: true })
+    try {
+      await prisma.service.delete({
+        where: { id: Number(id) }
+      })
+      return NextResponse.json({ success: true })
+    } catch (error) {
+      return NextResponse.json({ error: 'Failed to delete service' }, { status: 500 })
+    }
   }
   
   return NextResponse.json({ error: 'ID required' }, { status: 400 })

@@ -1,35 +1,60 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
-import { getDb, saveDb, Appointment } from '@/lib/db'
+import prisma from '@/lib/prisma'
 
 export async function GET() {
-  const db = getDb()
-  // Randevuları tarihe göre yeniler önce gelecek şekilde sıralayalım
-  const sortedAppointments = [...db.appointments].sort((a, b) => 
-    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  )
-  return NextResponse.json(sortedAppointments)
+  try {
+    const appointments = await prisma.appointment.findMany({
+      include: {
+        services: {
+          include: {
+            service: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    })
+    return NextResponse.json(appointments)
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  const db = getDb()
-  const body = await request.json()
-  
-  const newAppointment: Appointment = {
-    id: db.appointments.length > 0 ? Math.max(...db.appointments.map(a => a.id)) + 1 : 1,
-    customerName: body.customerName,
-    customerPhone: body.customerPhone,
-    carModel: body.carModel,
-    date: body.date,
-    timeSlot: body.timeSlot,
-    status: 'Pending',
-    totalCost: Number(body.totalCost),
-    serviceIds: body.serviceIds || [],
-    createdAt: new Date().toISOString()
+  try {
+    const body = await request.json()
+    
+    const newAppointment = await prisma.appointment.create({
+      data: {
+        customerName: body.customerName,
+        customerPhone: body.customerPhone,
+        carModel: body.carModel,
+        date: body.date,
+        timeSlot: body.timeSlot,
+        status: 'Pending',
+        totalCost: Number(body.totalCost),
+        services: {
+          create: (body.serviceIds || []).map((serviceId: number) => ({
+            service: {
+              connect: { id: Number(serviceId) }
+            }
+          }))
+        }
+      },
+      include: {
+        services: {
+          include: {
+            service: true
+          }
+        }
+      }
+    })
+    
+    return NextResponse.json(newAppointment, { status: 201 })
+  } catch (error) {
+    console.error('Appointment Error:', error)
+    return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 })
   }
-  
-  db.appointments.push(newAppointment)
-  saveDb(db)
-  
-  return NextResponse.json(newAppointment, { status: 201 })
 }
