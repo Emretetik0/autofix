@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
-export async function PUT(request: Request, context: any) {
+export async function PUT(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { params } = context
     const p = await params
@@ -23,12 +23,12 @@ export async function PUT(request: Request, context: any) {
     })
     
     return NextResponse.json(updatedAppointment)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Appointment not found or update failed' }, { status: 404 })
   }
 }
 
-export async function DELETE(request: Request, context: any) {
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { params } = context
     const p = await params
@@ -44,7 +44,7 @@ export async function DELETE(request: Request, context: any) {
     })
     
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to delete appointment' }, { status: 500 })
   }
 }

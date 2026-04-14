@@ -17,7 +17,7 @@ export async function GET() {
       }
     })
     return NextResponse.json(appointments)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to fetch appointments' }, { status: 500 })
   }
 }
@@ -53,8 +53,8 @@ export async function POST(request: Request) {
     })
     
     return NextResponse.json(newAppointment, { status: 201 })
-  } catch (error) {
-    console.error('Appointment Error:', error)
+  } catch (_error) {
+    console.error('Appointment Error:', _error)
     return NextResponse.json({ error: 'Failed to create appointment' }, { status: 500 })
   }
 }

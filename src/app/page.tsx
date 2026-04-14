@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 interface Service {
   id: number
@@ -15,7 +15,11 @@ import { initialServices } from '@/lib/mockData'
 export default function Home() {
   const [services] = useState<Service[]>(initialServices)
   const [selectedServices, setSelectedServices] = useState<number[]>([])
-  const [totalCost, setTotalCost] = useState(0)
+  
+  const totalCost = selectedServices.reduce((sum, id) => {
+    const service = services.find(s => s.id === id)
+    return sum + (service ? service.price : 0)
+  }, 0)
   
   const [formData, setFormData] = useState({
     customerName: '',
@@ -26,14 +30,6 @@ export default function Home() {
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    const total = selectedServices.reduce((sum, id) => {
-      const service = services.find(s => s.id === id)
-      return sum + (service ? service.price : 0)
-    }, 0)
-    setTotalCost(total)
-  }, [selectedServices, services])
 
   const toggleService = (id: number) => {
     setSelectedServices(prev => 

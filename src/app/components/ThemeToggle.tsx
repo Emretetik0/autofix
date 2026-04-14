@@ -9,6 +9,7 @@ export default function ThemeToggle() {
     // Check initial preference
     const saved = localStorage.getItem('theme')
     if (saved === 'light') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLight(true)
       document.body.classList.add('light-mode')
     }

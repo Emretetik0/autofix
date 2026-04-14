@@ -6,7 +6,7 @@ export async function GET() {
   try {
     const services = await prisma.service.findMany()
     return NextResponse.json(services)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to fetch services' }, { status: 500 })
   }
 }
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     })
     
     return NextResponse.json(newService, { status: 201 })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Failed to create service' }, { status: 500 })
   }
 }
@@ -45,7 +45,7 @@ export async function PUT(request: Request) {
     })
     
     return NextResponse.json(updatedService)
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Service not found or update failed' }, { status: 404 })
   }
 }
@@ -60,7 +60,7 @@ export async function DELETE(request: Request) {
         where: { id: Number(id) }
       })
       return NextResponse.json({ success: true })
-    } catch (error) {
+    } catch (_error) {
       return NextResponse.json({ error: 'Failed to delete service' }, { status: 500 })
     }
   }
