@@ -10,8 +10,10 @@ interface Service {
   duration: number
 }
 
+import { initialServices } from '@/lib/mockData'
+
 export default function Home() {
-  const [services, setServices] = useState<Service[]>([])
+  const [services] = useState<Service[]>(initialServices)
   const [selectedServices, setSelectedServices] = useState<number[]>([])
   const [totalCost, setTotalCost] = useState(0)
   
@@ -24,12 +26,6 @@ export default function Home() {
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
-
-  useEffect(() => {
-    fetch('/api/services')
-      .then(res => res.json())
-      .then(data => setServices(data))
-  }, [])
 
   useEffect(() => {
     const total = selectedServices.reduce((sum, id) => {
@@ -53,27 +49,18 @@ export default function Home() {
     }
     
     setLoading(true)
-    const res = await fetch('/api/appointments', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...formData,
-        totalCost,
-        serviceIds: selectedServices
-      })
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 800))
+    
+    setSuccess(true)
+    setSelectedServices([])
+    setFormData({
+      customerName: '',
+      customerPhone: '',
+      carModel: '',
+      date: '',
+      timeSlot: '10:00'
     })
-
-    if (res.ok) {
-      setSuccess(true)
-      setSelectedServices([])
-      setFormData({
-        customerName: '',
-        customerPhone: '',
-        carModel: '',
-        date: '',
-        timeSlot: '10:00'
-      })
-    }
     setLoading(false)
   }
 

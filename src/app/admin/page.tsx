@@ -22,9 +22,11 @@ interface Appointment {
   createdAt: string
 }
 
+import { initialServices, initialAppointments } from '@/lib/mockData'
+
 export default function AdminPage() {
-  const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [services, setServices] = useState<Service[]>([])
+  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments)
+  const [services, setServices] = useState<Service[]>(initialServices)
   
   const [activeTab, setActiveTab] = useState<'appointments' | 'services'>('appointments')
 
@@ -37,59 +39,38 @@ export default function AdminPage() {
     duration: ''
   })
 
-  useEffect(() => {
-    fetchData()
-  }, [])
-
-  const fetchData = async () => {
-    // Prevent client caching by using cache: 'no-store' and a timestamp
-    const query = `?t=${new Date().getTime()}`;
-    const [apRes, srvRes] = await Promise.all([
-      fetch(`/api/appointments${query}`, { cache: 'no-store' }),
-      fetch(`/api/services${query}`, { cache: 'no-store' })
-    ])
-    const [apData, srvData] = await Promise.all([
-      apRes.json(),
-      srvRes.json()
-    ])
-    setAppointments(apData)
-    setServices(srvData)
+  const handleUpdateStatus = (id: number, status: 'Pending' | 'Approved' | 'Rejected') => {
+    setAppointments(prev => prev.map(ap => ap.id === id ? { ...ap, status } : ap))
   }
 
-  const handleUpdateStatus = async (id: number, status: string) => {
-    await fetch(`/api/appointments/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    })
-    fetchData()
-  }
-
-  const handleDeleteAppointment = async (id: number) => {
+  const handleDeleteAppointment = (id: number) => {
     if (confirm('Bu randevuyu silmek istediğinize emin misiniz?')) {
-      await fetch(`/api/appointments/${id}`, { method: 'DELETE' })
-      fetchData()
+      setAppointments(prev => prev.filter(ap => ap.id !== id))
     }
   }
 
-  const handleServiceSubmit = async (e: React.FormEvent) => {
+  const handleServiceSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (editingService) {
-      await fetch(`/api/services`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...serviceForm, id: editingService.id })
-      })
+      setServices(prev => prev.map(srv => srv.id === editingService.id ? {
+        ...srv,
+        name: serviceForm.name,
+        description: serviceForm.description,
+        price: Number(serviceForm.price),
+        duration: Number(serviceForm.duration)
+      } : srv))
     } else {
-      await fetch(`/api/services`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(serviceForm)
-      })
+      const newService: Service = {
+        id: services.length > 0 ? Math.max(...services.map(s => s.id)) + 1 : 1,
+        name: serviceForm.name,
+        description: serviceForm.description,
+        price: Number(serviceForm.price),
+        duration: Number(serviceForm.duration)
+      }
+      setServices(prev => [...prev, newService])
     }
     setEditingService(null)
     setServiceForm({ name: '', description: '', price: '', duration: '' })
-    fetchData()
   }
 
   const handleEditService = (srv: Service) => {
@@ -103,10 +84,9 @@ export default function AdminPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
-  const handleDeleteService = async (id: number) => {
+  const handleDeleteService = (id: number) => {
     if (confirm('Hizmeti silmek istediğinize emin misiniz?')) {
-      await fetch(`/api/services?id=${id}`, { method: 'DELETE' })
-      fetchData()
+      setServices(prev => prev.filter(srv => srv.id !== id))
     }
   }
 
