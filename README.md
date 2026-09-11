@@ -1,4 +1,4 @@
-<h1 align="center">**Autofix**, modern araç sahiplerinin hayatını kolaylaştırmak için tasarlanmış, şık ve güçlü bir randevu yönetim sistemidir. Kullanıcı dostu arayüzü ve yönetici paneli ile servis süreçlerini dijitalleştirir.</h1>
+
 <p align="center">
   <img src="assets/banner.png" alt="Autofix Banner" width="100%">
 </p>
